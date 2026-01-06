@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            cursor: wait;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 20px;
+            animation: glitch 2s infinite;
+        }
+
+        .loading-text {
+            font-size: clamp(20px, 5vw, 32px);
+            color: #fff;
+            margin-bottom: 20px;
+            animation: blink 1s infinite;
+        }
+
+        .error-code {
+            font-size: clamp(40px, 10vw, 80px);
+            font-weight: bold;
+            color: #ff4444;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            margin-bottom: 20px;
+            animation: error-pulse 1s ease-in-out infinite;
+        }
+
+        .status-message {
+            font-size: clamp(16px, 4vw, 24px);
+            color: #ccc;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: min(300px, 80vw);
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ff6666);
+            width: 0%;
+            animation: progress 3s ease-in-out infinite;
+        }
+
+        .loading-dots {
+            font-size: 24px;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        .loading-dots span {
+            animation: dot-blink 1.4s infinite both;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float-random 10s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            left: 70%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            left: 40%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 40px;
+            height: 40px;
+            left: 85%;
+            animation-delay: 6s;
+        }
+
+        .shape:nth-child(5) {
+            width: 70px;
+            height: 70px;
+            left: 25%;
+            animation-delay: 8s;
+        }
+
+        .music-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 68, 68, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .music-indicator.playing {
+            background: rgba(255, 68, 68, 0.4);
+            animation: music-pulse 1s ease-in-out infinite;
+        }
+
+        .click-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 68, 68, 0.3);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            animation: bounce 2s ease-in-out infinite;
+            border: 1px solid rgba(255, 68, 68, 0.5);
+        }
+
+        @keyframes glitch {
+            0%, 100% { 
+                transform: translate(0);
+                filter: hue-rotate(0deg);
+            }
+            20% { 
+                transform: translate(-2px, 2px);
+                filter: hue-rotate(90deg);
+            }
+            40% { 
+                transform: translate(-2px, -2px);
+                filter: hue-rotate(180deg);
+            }
+            60% { 
+                transform: translate(2px, 2px);
+                filter: hue-rotate(270deg);
+            }
+            80% { 
+                transform: translate(2px, -2px);
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        @keyframes error-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 75%; }
+            100% { width: 0%; }
+        }
+
+        @keyframes dot-blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        @keyframes float-random {
+            0%, 100% { 
+                transform: translateY(0px) translateX(0px) scale(1);
+                opacity: 0.1;
+            }
+            25% { 
+                transform: translateY(-100px) translateX(50px) scale(1.2);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-50px) translateX(-30px) scale(0.8);
+                opacity: 0.2;
+            }
+            75% { 
+                transform: translateY(-150px) translateX(-50px) scale(1.1);
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes music-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 1s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .music-indicator {
+                top: 10px;
+                right: 10px;
+                font-size: 12px;
+                padding: 8px 15px;
+            }
+            
+            .click-hint {
+                bottom: 20px;
+                font-size: 14px;
+                padding: 12px 20px;
+                left: 10px;
+                right: 10px;
+                transform: none;
+                width: calc(100% - 20px);
+            }
+            
+            .loading-text {
+                font-size: clamp(18px, 6vw, 28px);
+            }
+            
+            .error-code {
+                font-size: clamp(30px, 8vw, 60px);
+            }
+            
+            .status-message {
+                font-size: clamp(14px, 3.5vw, 20px);
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+                margin: 5px;
+            }
+            
+            .music-indicator {
+                top: 5px;
+                right: 5px;
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+            
+            .click-hint {
+                bottom: 10px;
+                font-size: 12px;
+                padding: 10px 15px;
+            }
+            
+            .loading-text {
+                font-size: clamp(16px, 5vw, 24px);
+                margin-bottom: 15px;
+            }
+            
+            .error-code {
+                font-size: clamp(24px, 7vw, 48px);
+                margin-bottom: 15px;
+            }
+            
+            .status-message {
+                font-size: clamp(12px, 3vw, 18px);
+                margin-bottom: 15px;
+            }
+            
+            .progress-bar {
+                width: min(250px, 90vw);
+                margin: 15px auto;
+            }
+            
+            .loading-dots {
+                font-size: 20px;
+                margin-top: 15px;
+            }
+            
+            .shape {
+                opacity: 0.05;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .loading-text {
+                font-size: clamp(14px, 4.5vw, 20px);
+            }
+            
+            .error-code {
+                font-size: clamp(20px, 6vw, 36px);
+            }
+            
+            .status-message {
+                font-size: clamp(11px, 2.8vw, 16px);
+            }
+            
+            .progress-bar {
+                width: min(200px, 85vw);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="loading-text">Загрузка страницы</div>
+        <div class="error-code">ERROR_CONNECTION_FAILED</div>
+        <div class="status-message">Не удалось установить соединение с сервером</div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="loading-dots">
+            <span>.</span><span>.</span><span>.</span>
+        </div>
+    </div>
+
+    <div class="music-indicator" id="musicIndicator">
+            ⚠️ Системная ошибка
+        </div>
+
+    <div class="click-hint" id="clickHint">
+        �️ Кликните для диагностики
+    </div>
+
+    <audio id="backgroundMusic" loop>
+        <source src="stone.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио.
+    </audio>
+
+    <script>
+        let musicPlaying = false;
+        let clickCount = 0;
+        const audio = document.getElementById('backgroundMusic');
+        const musicIndicator = document.getElementById('musicIndicator');
+        const clickHint = document.getElementById('clickHint');
+
+        // Создаем простой звук с Web Audio API
+        function createBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 440 + Math.random() * 440;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Функция создания ряби
+        function createRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.width = '20px';
+            ripple.style.height = '20px';
+            ripple.style.left = x - 10 + 'px';
+            ripple.style.top = y - 10 + 'px';
+            
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 1000);
+        }
+
+        // Обработчик клика
+        document.body.addEventListener('click', function(e) {
+            clickCount++;
+            
+            // Создаем рябь
+            createRipple(e.clientX, e.clientY);
+            
+            // Включаем музыку при первом клике
+            if (!musicPlaying) {
+                musicPlaying = true;
+                musicIndicator.textContent = '⚠️ Критическая ошибка системы';
+                musicIndicator.classList.add('playing');
+                clickHint.style.display = 'none';
+                
+                // Меняем курсор на нормальный
+                document.body.style.cursor = 'default';
+                
+                // Проигрываем stone.mp3 на 100% громкости
+                audio.volume = 1.0;
+                audio.play().catch(e => {
+                    console.log('Автовоспроизведение заблокировано браузером');
+                });
+            } else {
+                // Добавляем случайные звуки при последующих кликах
+                if (clickCount % 5 === 0) {
+                    createBeep();
+                }
+            }
+            
+            // Создаем дополнительные визуальные эффекты
+            createRandomShape();
+        });
+
+        // Бесконечная музыка
+        function playInfiniteMusic() {
+            const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            let noteIndex = 0;
+            
+            function playNote() {
+                if (!musicPlaying) return;
+                
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = notes[noteIndex % notes.length];
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+                noteIndex++;
+                
+                setTimeout(playNote, 300 + Math.random() * 200);
+            }
+            
+            playNote();
+        }
+
+        // Создание случайных фигур
+        function createRandomShape() {
+            const shape = document.createElement('div');
+            shape.className = 'shape';
+            shape.style.width = Math.random() * 60 + 20 + 'px';
+            shape.style.height = shape.style.width;
+            shape.style.left = Math.random() * 100 + '%';
+            shape.style.top = Math.random() * 100 + '%';
+            shape.style.animationDelay = Math.random() * 2 + 's';
+            shape.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            
+            document.querySelector('.floating-shapes').appendChild(shape);
+            
+            setTimeout(() => {
+                shape.remove();
+            }, 10000);
+        }
+
+        // Периодическое создание фигур
+        setInterval(() => {
+            if (musicPlaying && Math.random() > 0.7) {
+                createRandomShape();
+            }
+        }, 2000);
+
+        // Изменение градиента фона
+        let hue = 0;
+        setInterval(() => {
+            if (musicPlaying) {
+                hue = (hue + 1) % 360;
+                document.body.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 60%) 0%, hsl(${(hue + 60) % 360}, 70%, 50%) 100%)`;
+            }
+        }, 100);
+
+        // Скрываем подсказку через 10 секунд
+        setTimeout(() => {
+            if (!musicPlaying) {
+                clickHint.style.opacity = '0.5';
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
